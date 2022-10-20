@@ -26,7 +26,7 @@ async function getAppointments(req, res) {
 
 	catch (err) {
 		console.error("Request error", err);
-		return res.status(500).json({ error: "Error retrieving Service Operators", success: false });
+		return res.status(500).json({ error: "Error retrieving Appointments", success: false });
 	}
 }
 
@@ -48,7 +48,7 @@ async function createAppointment(req, res) {
 
 	catch (err) {
 		console.error("Request error", err);
-		return res.status(500).json({ error: "Error creating Service Operator", success: false });
+		return res.status(500).json({ error: "Error creating appointment", success: false });
 	}
 }
 
@@ -67,11 +67,11 @@ async function updateAppointment(req, res) {
 			}
 		});
 
-		return res.status(201).json(updatedAppointment, { success: true });
+		return res.status(200).json(updatedAppointment, { success: true });
 	}
 
 	catch (err) {
 		console.error("Request error", err);
-		return res.status(500).json({ error: "Error updating Service Operator", success: false });
+		return res.status(500).json({ error: "Error updating the appointment", success: false });
 	}
 }
