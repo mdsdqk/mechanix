@@ -47,6 +47,20 @@ async function createAppointment(req, res) {
 	const body = req.body;
 	console.log(body);
 	try {
+		if (!body.serviceOpId) {
+			const availableServiceOps = await prisma.$queryRaw`SELECT s.id from ServiceOp as s where s.id NOT IN (
+				SELECT a.serviceOpId from ServiceOp as s right join Appointment as a on a.id = s.id
+				where a.time = ${new Date(body.time)}
+			) limit 1`;
+
+			//console.log(availableServiceOps);
+
+			if (!availableServiceOps.length)
+				return res.status(400).json({ error: "No service operators available", success: false });
+
+			body.serviceOpId = availableServiceOps[0].id;
+		}
+
 		const newAppointment = await prisma.appointment.create({
 			data: {
 				//TODO: Add (backend) validation to time
