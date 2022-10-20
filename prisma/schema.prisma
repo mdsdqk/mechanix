@@ -19,10 +19,11 @@ model ServiceOp {
 model Appointment {
   id          String   @id @default(uuid())
   serviceOpId String
-  time        DateTime @unique
+  time        DateTime
   status      String
 
   ServiceOp ServiceOp @relation(fields: [serviceOpId], references: [id], onDelete: Cascade)
 
+  @@unique([time, status])
   @@index([serviceOpId])
 }
