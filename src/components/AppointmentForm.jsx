@@ -8,6 +8,13 @@ export default function AppointmentForm() {
 		appointmentDate: "",
 		timeslot: ""
 	});
+	const [isBooking, setIsBooking] = useState(false);
+	const [bookingData, setBookingData] = useState({
+		id: "",
+		serviceOpId: "",
+		time: "",
+		status: ""
+	});
 
 	useEffect(() => {
 		getServiceOps();
@@ -17,7 +24,7 @@ export default function AppointmentForm() {
 		async function getTimeslots() {
 			const res = await fetch(`/api/appointments/slots?serviceOpId=${form.serviceOp}&date=${form.appointmentDate}`);
 			const data = await res.json();
-			console.log(data);
+			//console.log(data);
 			setTimeslots(data);
 		}
 
@@ -47,6 +54,7 @@ export default function AppointmentForm() {
 	function setDate(evt) {
 		const updatedFrom = {
 			...form,
+			timeslot: "",
 			appointmentDate: evt.target.value
 		};
 
@@ -55,7 +63,28 @@ export default function AppointmentForm() {
 
 	function onSubmit(evt) {
 		evt.preventDefault();
-		console.log(form);
+		bookSlot();
+	}
+
+	async function bookSlot() {
+		setIsBooking(true);
+
+		const body = {
+			serviceOpId: form.serviceOp,
+			time: `${form.appointmentDate} ${form.timeslot}`
+		};
+
+		const res = await fetch("/api/appointments/", {
+			method: "POST",
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(body)
+		});
+
+		const data = await res.json();
+		setBookingData(data);
+		setIsBooking(false);
 	}
 
 	return (
@@ -91,25 +120,31 @@ export default function AppointmentForm() {
 				</div>
 				<div className="mb-6">
 					<label htmlFor="timeslot" className="block mb-2 text-sm font-medium text-gray-900">Time Slot</label>
-					<select name="timeslot" id="timeslot" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full p-2.5">
+					<select name="timeslot" id="timeslot" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full p-2.5"
+						onChange={handleChange} value={form.timeslot}
+					>
 						<option value="" className="p-2">Choose a Timeslot</option>
 						{
 							timeslots.map((timeslot) => {
 								if (timeslot.booked)
 									return (
-										<option disabled key={timeslot.slot} value={timeslot} className="p-2 flex justify-between">
-											<p>{`${timeslot.slot.toString().padStart(2, '0')}:00`}</p>
+										<option disabled key={timeslot.slot} value={timeslot.slot} className="p-2 flex justify-between">
+											<p>{timeslot.slot}</p>
 											<p> (Booked)</p>
 										</option>
 									);
 
 								else
-									return <option key={timeslot.slot} value={timeslot} className="p-2">{`${timeslot.slot.toString().padStart(2, '0')}:00`}</option>;
+									return <option key={timeslot.slot} value={timeslot.slot} className="p-2">{timeslot.slot}</option>;
 							})
 						}
 					</select>
 				</div>
-				<button type="submit" className="text-white bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 font-medium rounded-lg text-sm w-full px-5 py-2.5 text-center">Book Appointment</button>
+				<button type="submit" className="text-white bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 font-medium rounded-lg text-sm w-full px-5 py-2.5 text-center">
+					{
+						isBooking ? "Booking in progress..." : "Book Appointment"
+					}
+				</button>
 			</form>
 		</div>
 	);

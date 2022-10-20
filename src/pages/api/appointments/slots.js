@@ -38,9 +38,10 @@ async function getSlots(req, res) {
 			bookedSlots = bookedSlots.map(x => x.time.getHours());
 
 			const slots = new Array(24).fill(0).map((_, index) => {
+				const slot = index.toString().padStart(2, '0') + ":00";
 				return bookedSlots.includes(index)
-					? { slot: index, booked: true }
-					: { slot: index, booked: false };
+					? { slot: slot, booked: true }
+					: { slot: slot, booked: false };
 			});
 
 			return res.status(200).json(slots, { success: true });
