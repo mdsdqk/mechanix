@@ -1,26 +1,76 @@
 import { useState, useEffect } from "react";
 
 export default function AppointmentForm() {
-	const [serviceOps, setServiceOps] = useState(["SOP1", "SOP2", "SOP3"]);
-	const [timeslots, setTimeslots] = useState(["00:00", "01:00", "02:00", "03:00", "04:00", "05:00"]);
-	const bookedslots = ["02:00"];
+	const [serviceOps, setServiceOps] = useState([]);
+	const [timeslots, setTimeslots] = useState([]);
+	const [form, setForm] = useState({
+		serviceOp: "",
+		appointmentDate: "",
+		timeslot: ""
+	});
 
 	useEffect(() => {
-		//setServiceOps
-
+		getServiceOps();
 	}, []);
+
+	useEffect(() => {
+		async function getTimeslots() {
+			const res = await fetch(`/api/appointments/slots?serviceOpId=${form.serviceOp}&date=${form.appointmentDate}`);
+			const data = await res.json();
+			console.log(data);
+			setTimeslots(data);
+		}
+
+		if (form.appointmentDate)
+			getTimeslots();
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [form.appointmentDate]);
+
+	async function getServiceOps() {
+		const res = await fetch("/api/serviceops");
+		const data = await res.json();
+		setServiceOps(data);
+	}
+
+
+
+	function handleChange(evt) {
+		const updatedFrom = {
+			...form,
+			[evt.target.id]: evt.target.value
+		};
+
+		setForm(updatedFrom);
+	};
+
+	function setDate(evt) {
+		const updatedFrom = {
+			...form,
+			appointmentDate: evt.target.value
+		};
+
+		setForm(updatedFrom);
+	}
+
+	function onSubmit(evt) {
+		evt.preventDefault();
+		console.log(form);
+	}
 
 	return (
 		<div className="max-w-md mx-auto m-2 p-2 border border-gray-100 rounded-sm shadow-2xl bg-white">
 			<h2 className="m-2 md:m-4 text-center font-medium text-xl md:text-2xl text-slate-700">Book a service</h2>
-			<form className="m-2">
+			<form className="m-2" onSubmit={onSubmit}>
 				<div className="mb-6">
-					<label htmlFor="serviceOps" className="block mb-2 text-sm font-medium text-gray-900">Service Operator</label>
-					<select name="serviceOps" id="serviceOps" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full p-2.5">
+					<label htmlFor="serviceOp" className="block mb-2 text-sm font-medium text-gray-900">Service Operator</label>
+					<select name="serviceOp" id="serviceOp" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full p-2.5"
+						onChange={handleChange}
+					>
 						<option value="" className="p-2">Choose a Service Operator</option>
 						{
 							serviceOps.map((serviceOp) => {
-								return <option key={serviceOp} value={serviceOp} className="p-2">{serviceOp}</option>;
+								return <option key={serviceOp.id} value={serviceOp.id} className="p-2">{serviceOp.name}</option>;
 							})
 						}
 					</select>
@@ -34,17 +84,27 @@ export default function AppointmentForm() {
 								</path>
 							</svg>
 						</div>
-						<input type="date" id="appointmentDate" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5" placeholder="Select date" />
+						<input type="date" id="appointmentDate" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5"
+							placeholder="Select date" onChange={setDate} min={new Date().toISOString().split("T")[0]}
+						/>
 					</div>
 				</div>
 				<div className="mb-6">
-					<label htmlFor="timeslots" className="block mb-2 text-sm font-medium text-gray-900">Time Slot</label>
-					<select name="timeslots" id="timeslots" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full p-2.5">
+					<label htmlFor="timeslot" className="block mb-2 text-sm font-medium text-gray-900">Time Slot</label>
+					<select name="timeslot" id="timeslot" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full p-2.5">
 						<option value="" className="p-2">Choose a Timeslot</option>
 						{
 							timeslots.map((timeslot) => {
-								if (!bookedslots.includes(timeslot))
-									return <option key={timeslot} value={timeslot} className="p-2">{timeslot}</option>;
+								if (timeslot.booked)
+									return (
+										<option disabled key={timeslot.slot} value={timeslot} className="p-2 flex justify-between">
+											<p>{`${timeslot.slot.toString().padStart(2, '0')}:00`}</p>
+											<p> (Booked)</p>
+										</option>
+									);
+
+								else
+									return <option key={timeslot.slot} value={timeslot} className="p-2">{`${timeslot.slot.toString().padStart(2, '0')}:00`}</option>;
 							})
 						}
 					</select>
