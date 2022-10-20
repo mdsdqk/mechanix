@@ -1,0 +1,28 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["referentialIntegrity"]
+}
+
+datasource db {
+  provider             = "mysql"
+  url                  = env("DATABASE_URL")
+  referentialIntegrity = "prisma"
+}
+
+model ServiceOp {
+  id           String        @id @default(uuid())
+  name         String
+  location     String?       @db.VarChar(1000)
+  appointments Appointment[]
+}
+
+model Appointment {
+  id          String   @id @default(uuid())
+  serviceOpId String
+  time        DateTime @unique
+  status      String
+
+  ServiceOp ServiceOp @relation(fields: [serviceOpId], references: [id], onDelete: Cascade)
+
+  @@index([serviceOpId])
+}
